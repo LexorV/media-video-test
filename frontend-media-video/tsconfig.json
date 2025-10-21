@@ -1,0 +1,12 @@
+{
+  "extends": "./.quasar/tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "widgets/*": ["src/widgets/*"],
+      "entities/*": ["src/entities/*"],
+      "shared/*": ["src/shared/*"],
+      "stores/*": ["src/stores/*"]
+    }
+  }
+}
