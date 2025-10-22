@@ -8,10 +8,19 @@ ENV PORT=3000
 
 # Install dependencies first (leverage Docker layer cache)
 COPY package*.json ./
-RUN npm ci --omit=dev
+COPY tsconfig.json ./
+RUN npm ci
 
 # Copy source code
-COPY . .
+COPY src ./src
+COPY views ./views
+COPY public ./public
+
+# Build TypeScript
+RUN npm run build
+
+# Remove dev dependencies after build
+RUN npm prune --omit=dev
 
 EXPOSE 3000
 

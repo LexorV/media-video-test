@@ -30,3 +30,6 @@ export default store((/* { ssrContext } */) => {
 
   return pinia;
 });
+
+export * from './auth-store';
+export * from './settings-store';
