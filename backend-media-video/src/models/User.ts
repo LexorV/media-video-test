@@ -7,6 +7,7 @@ export interface IUser extends Document {
   password: string;
   name?: string;
   age?: number;
+  videos: mongoose.Types.ObjectId[];
   createdAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
@@ -40,6 +41,11 @@ const UserSchema = new mongoose.Schema<IUser>({
     type: Number,
     min: 0
   },
+  videos: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Video',
+    default: []
+  }],
   createdAt: {
     type: Date,
     default: Date.now

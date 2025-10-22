@@ -7,6 +7,14 @@ import logger from 'morgan';
 import mongoose from 'mongoose';
 import cors from 'cors';
 
+// Import routes
+import indexRouter from './routes/index.js';
+import usersRouter from './routes/users.js';
+import videosRouter from './routes/videos.js';
+
+// Import and initialize Redis Queue
+import { initializeQueue, closeQueue } from './queues/videoConversionQueue.js';
+
 // ES Modules equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,8 +24,17 @@ const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/media-vid
 mongoose.connect(mongoUri);
 
 const db = mongoose.connection;
-db.on('connected', () => {
+db.on('connected', async () => {
   console.log('Mongoose connected to ' + mongoUri);
+  
+  // Инициализация Redis Queue после успешного подключения к MongoDB
+  try {
+    await initializeQueue();
+    console.log('✅ [App] Redis Queue успешно инициализирована');
+  } catch (error) {
+    console.error('❌ [App] Ошибка инициализации Redis Queue:', error);
+    console.warn('⚠️ [App] Приложение продолжит работу без очереди');
+  }
 });
 db.on('error', (err) => {
   console.error('Mongoose connection error:', err);
@@ -26,18 +43,46 @@ db.on('disconnected', () => {
   console.log('Mongoose disconnected');
 });
 
-process.on('SIGINT', () => {
-  db.close().then(() => {
-    console.log('Mongoose disconnected on app termination');
-    process.exit(0);
-  });
+// Graceful shutdown для MongoDB и Redis Queue
+process.on('SIGINT', async () => {
+  console.log('📴 [App] Получен сигнал SIGINT, завершаю работу...');
+  
+  try {
+    await closeQueue();
+    console.log('✅ [App] Redis Queue закрыта');
+  } catch (error) {
+    console.error('❌ [App] Ошибка закрытия Redis Queue:', error);
+  }
+  
+  await db.close();
+  console.log('✅ [App] Mongoose отключен');
+  process.exit(0);
 });
 
-// Import routes
-import indexRouter from './routes/index.js';
-import usersRouter from './routes/users.js';
+process.on('SIGTERM', async () => {
+  console.log('📴 [App] Получен сигнал SIGTERM, завершаю работу...');
+  
+  try {
+    await closeQueue();
+    console.log('✅ [App] Redis Queue закрыта');
+  } catch (error) {
+    console.error('❌ [App] Ошибка закрытия Redis Queue:', error);
+  }
+  
+  await db.close();
+  console.log('✅ [App] Mongoose отключен');
+  process.exit(0);
+});
 
 const app = express();
+
+// Создание директории для загрузки видео, если она не существует
+import fs from 'fs';
+const uploadDir = process.env.UPLOAD_DIR || './uploads/videos';
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+  console.log(`Создана директория для загрузки: ${uploadDir}`);
+}
 
 // CORS configuration
 app.use(cors({
@@ -57,14 +102,15 @@ app.use(express.static(path.join(__dirname, '../public')));
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+app.use('/videos', videosRouter);
 
 // catch 404 and forward to error handler
-app.use((req: Request, res: Response, next: NextFunction) => {
+app.use((_req: Request, _res: Response, next: NextFunction) => {
   next(createError(404));
 });
 
 // error handler
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};

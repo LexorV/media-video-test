@@ -14,8 +14,27 @@
         <div class="text-body1 q-mb-md">
           Это главная страница вашего приложения.
         </div>
-        <div class="text-body2 text-grey-7">
+        <div class="text-body2 text-grey-7 q-mb-md">
           Используйте меню слева для навигации по приложению.
+        </div>
+
+        <div class="q-gutter-sm">
+          <q-btn
+            outline
+            color="primary"
+            label="Загрузить видео"
+            icon="upload"
+            :to="'/upload-video'"
+            class="full-width"
+          />
+          <q-btn
+            outline
+            color="primary"
+            label="Мои видео"
+            icon="video_library"
+            :to="'/videos'"
+            class="full-width"
+          />
         </div>
       </q-card-section>
 

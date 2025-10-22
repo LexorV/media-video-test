@@ -7,6 +7,8 @@ const routes: RouteRecordRaw[] = [
     children: [
       { path: '', component: () => import('pages/IndexPage.vue'), meta: { requiresAuth: true } },
       { path: 'settings', component: () => import('pages/SettingsPage.vue'), meta: { requiresAuth: true } },
+      { path: 'upload-video', component: () => import('pages/UploadVideoPage.vue'), meta: { requiresAuth: true } },
+      { path: 'videos', component: () => import('pages/VideosPage.vue'), meta: { requiresAuth: true } },
     ],
   },
   {

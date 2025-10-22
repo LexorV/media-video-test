@@ -51,6 +51,34 @@
 
         <q-item
           clickable
+          :to="'/upload-video'"
+          active-class="bg-primary text-white"
+        >
+          <q-item-section avatar>
+            <q-icon name="upload" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>Загрузка видео</q-item-label>
+          </q-item-section>
+        </q-item>
+
+        <q-item
+          clickable
+          :to="'/videos'"
+          active-class="bg-primary text-white"
+        >
+          <q-item-section avatar>
+            <q-icon name="video_library" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>Просмотр видео</q-item-label>
+          </q-item-section>
+        </q-item>
+
+        <q-separator class="q-my-md" />
+
+        <q-item
+          clickable
           :to="'/settings'"
           active-class="bg-primary text-white"
         >

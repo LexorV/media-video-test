@@ -82,7 +82,7 @@ export class UserService {
       await user.save(); // Пароль будет автоматически захеширован благодаря pre-save middleware
 
       // Возвращаем пользователя без пароля
-      const userObject = user.toObject();
+      const userObject: any = user.toObject();
       delete userObject.password;
       return userObject as IUser;
     } catch (error) {
@@ -170,6 +170,67 @@ export class UserService {
       return true;
     } catch (error) {
       throw new Error(`Ошибка при смене пароля: ${error}`);
+    }
+  }
+
+  /**
+   * Добавить видео в массив пользователя
+   */
+  async addVideoToUser(userId: string, videoId: string): Promise<boolean> {
+    try {
+      if (!Types.ObjectId.isValid(userId) || !Types.ObjectId.isValid(videoId)) {
+        throw new Error('Некорректный ID');
+      }
+
+      const result = await User.findByIdAndUpdate(
+        userId,
+        { $addToSet: { videos: new Types.ObjectId(videoId) } },
+        { new: true }
+      );
+
+      return result !== null;
+    } catch (error) {
+      throw new Error(`Ошибка при добавлении видео пользователю: ${error}`);
+    }
+  }
+
+  /**
+   * Удалить видео из массива пользователя
+   */
+  async removeVideoFromUser(userId: string, videoId: string): Promise<boolean> {
+    try {
+      if (!Types.ObjectId.isValid(userId) || !Types.ObjectId.isValid(videoId)) {
+        throw new Error('Некорректный ID');
+      }
+
+      const result = await User.findByIdAndUpdate(
+        userId,
+        { $pull: { videos: new Types.ObjectId(videoId) } },
+        { new: true }
+      );
+
+      return result !== null;
+    } catch (error) {
+      throw new Error(`Ошибка при удалении видео у пользователя: ${error}`);
+    }
+  }
+
+  /**
+   * Получить пользователя с популяцией видео
+   */
+  async getUserWithVideos(userId: string): Promise<IUser | null> {
+    try {
+      if (!Types.ObjectId.isValid(userId)) {
+        throw new Error('Некорректный ID пользователя');
+      }
+
+      const user = await User.findById(userId)
+        .populate('videos')
+        .select('-password');
+      
+      return user;
+    } catch (error) {
+      throw new Error(`Ошибка при получении пользователя с видео: ${error}`);
     }
   }
 }
